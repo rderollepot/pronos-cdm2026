@@ -1,0 +1,39 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-09-dixon-coles-host-advantage.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 1: Module wc_model.py — chargement + ajustement Poisson",
+      "status": "completed",
+      "description": "**Goal:** Extraire la logique existante dans un module testable produisant un modèle de Poisson (rho=0), avec tests unitaires sur données synthétiques.\n\n**Files:**\n- Create: wc_model.py\n- Create: tests/test_wc_model.py\n\n**Acceptance Criteria:**\n- fit_model(train, date_ref=..., estimate_rho=False) renvoie un FittedModel avec rho == 0.0\n- FittedModel.predict(a, b) renvoie {lam_a, lam_b, p1, pN, p2, score} avec p1+pN+p2 ~= 1\n- Une équipe forte synthétique bat une faible : p1 > p2\n- pytest tests/test_wc_model.py -v passe (3 tests)\n\n**Verify:** .venv/bin/pytest tests/test_wc_model.py -v -> 3 passed\n\n**Steps:** installer pytest; écrire tests synthétiques; voir échouer; écrire wc_model.py (load_data, make_train, _build_exog, FittedModel, fit_model avec stub _estimate_rho); voir passer.\n\n```json:metadata\n{\"files\": [\"wc_model.py\", \"tests/test_wc_model.py\"], \"verifyCommand\": \".venv/bin/pytest tests/test_wc_model.py -v\", \"acceptanceCriteria\": [\"fit_model estimate_rho=False -> rho==0.0\", \"predict renvoie probas sommant a 1\", \"forte bat faible\", \"3 tests passent\"]}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 2: Estimation de rho (Dixon-Coles) dans wc_model.py",
+      "status": "completed",
+      "blockedBy": [
+        0
+      ],
+      "description": "**Goal:** Implémenter _estimate_rho (optimisation 1-D bornée sur la vraisemblance Dixon-Coles) pour activer la correction des petits scores.\n\n**Files:**\n- Modify: wc_model.py (remplacer le stub _estimate_rho)\n- Modify: tests/test_wc_model.py (ajouter tests Dixon-Coles)\n\n**Acceptance Criteria:**\n- fit_model(..., estimate_rho=True) renvoie rho fini dans [-0.2, 0.2]\n- Avec rho!=0 imposé, predict renvoie p1+pN+p2 ~= 1 et le nul change vs rho=0\n- pytest tests/test_wc_model.py -v passe (5 tests)\n\n**Verify:** .venv/bin/pytest tests/test_wc_model.py -v -> 5 passed\n\n**Steps:** ajouter 2 tests (rho fini/borné ; correction déterministe rho=-0.1 normalisée+nul change); voir échouer; remplacer stub par optimisation minimize_scalar bornée sur sum(w*log tau) des matchs petits scores; voir passer.\n\n```json:metadata\n{\"files\": [\"wc_model.py\", \"tests/test_wc_model.py\"], \"verifyCommand\": \".venv/bin/pytest tests/test_wc_model.py -v\", \"acceptanceCriteria\": [\"rho fini dans [-0.2,0.2]\", \"correction normalisee et deplace le nul\", \"5 tests passent\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 3: Réécrire predict_wc2026.py (module + avantage hôte réel)",
+      "status": "completed",
+      "blockedBy": [
+        1
+      ],
+      "description": "**Goal:** Script mince qui ajuste avec Dixon-Coles sur tout l'historique et prédit les 72 fixtures en lisant leur vrai neutral (avantage hôte automatique pour les 9 matchs des hôtes).\n\n**Files:**\n- Modify: predict_wc2026.py (réécriture complète)\n\n**Acceptance Criteria:**\n- Le script régénère pronostics_cdm2026.csv avec 72 lignes\n- model.rho non nul imprimé\n- Les 9 matchs neutral=FALSE montrent buts_attendus_A > version neutre (bloc de contrôle imprimé)\n- Le pays hôte est bien home_team dans les 9 lignes (assertion dans le script)\n\n**Verify:** .venv/bin/python predict_wc2026.py -> imprime rho, écrit 72 pronostics, bloc Controle avantage hote (9 lignes, écart positif)\n\n**Steps:** réécrire predict_wc2026.py utilisant wc_model; assertion host==home_team; boucle predict avec neutral réel; contrôle écart domicile vs neutre sur 9 matchs; écrire CSV.\n\n```json:metadata\n{\"files\": [\"predict_wc2026.py\"], \"verifyCommand\": \".venv/bin/python predict_wc2026.py\", \"acceptanceCriteria\": [\"72 lignes CSV\", \"rho imprime\", \"9 matchs hotes avec avantage\", \"assertion host=home_team\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 4: Script de validation validate.py (base vs Dixon-Coles)",
+      "status": "completed",
+      "blockedBy": [
+        1
+      ],
+      "description": "**Goal:** Mesurer hors-échantillon si Dixon-Coles améliore les prédictions, via un tableau comparatif exactitude / log-loss / calibration des nuls.\n\n**Files:**\n- Create: validate.py\n\n**Acceptance Criteria:**\n- Ajuste base (estimate_rho=False) et Dixon-Coles (estimate_rho=True) sur le même train (avant TEST_START)\n- Évalue sur matchs joués depuis TEST_START, restreints aux équipes connues\n- Imprime tableau : exactitude 1N2, log-loss, P(nul) moyen + fréquence réelle de nuls\n- Nombre de matchs test > 1000\n\n**Verify:** .venv/bin/python validate.py -> tableau base vs Dixon-Coles + fréquence réelle de nuls\n\n**Steps:** écrire validate.py; TEST_START=2024-01-01; train via make_train; test = joués depuis TEST_START restreints aux known; fonction evaluate (exactitude, log-loss, p_nul); ajuster les 2 modèles; imprimer tableau.\n\n```json:metadata\n{\"files\": [\"validate.py\"], \"verifyCommand\": \".venv/bin/python validate.py\", \"acceptanceCriteria\": [\"meme train pour les 2 modeles\", \"test restreint aux known\", \"tableau exactitude/logloss/pnul\", \"test > 1000 matchs\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-09T11:29:52.013504"
+}

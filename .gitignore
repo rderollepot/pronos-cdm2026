@@ -1,0 +1,13 @@
+# Environnement virtuel
+.venv/
+
+# Dataset téléchargé automatiquement par wc_model.load_data() (~3,7 Mo, régénérable)
+results.csv
+
+# Caches Python / pytest
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# macOS
+.DS_Store

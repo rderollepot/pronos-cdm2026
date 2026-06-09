@@ -1,0 +1,39 @@
+{
+  "planPath": "docs/superpowers/plans/2026-06-09-monte-carlo-simulation.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 1: bracket_2026.py — données officielles du tableau (recherche web + validation)",
+      "status": "completed",
+      "description": "**Goal:** Figer dans un module les 12 groupes officiels (lettres A-L) et le squelette officiel des 32es, et prouver leur cohérence avec les 72 affiches du dataset.\n\n**Files:**\n- Create: bracket_2026.py\n- Create: tests/test_bracket_2026.py\n\n**Acceptance Criteria:**\n- GROUPS a 12 clés A..L de 4 équipes ; union = 48 équipes des fixtures\n- chaque groupe = vraie clique de matchs du dataset (6 paires intra-groupe)\n- R32 a 16 paires ; créneaux 1X/2X valides ; exactement 8 créneaux T1..T8 distincts\n- pytest tests/test_bracket_2026.py -v passe\n\n**Verify:** .venv/bin/pytest tests/test_bracket_2026.py -v\n\n**Steps:** reconstruire groupes (union-find) comme vérité terrain ; WebSearch groupes A-L + squelette 32es (recouper 2 sources) ; CHECKPOINT utilisateur (montrer correspondance, attendre validation) ; écrire bracket_2026.py ; écrire+lancer tests de cohérence.\n\nNote: CHECKPOINT utilisateur au Step 3 — montrer la correspondance groupes<->lettres et le squelette des 32es, attendre validation avant d'écrire le module.\n\n```json:metadata\n{\"files\": [\"bracket_2026.py\", \"tests/test_bracket_2026.py\"], \"verifyCommand\": \".venv/bin/pytest tests/test_bracket_2026.py -v\", \"acceptanceCriteria\": [\"GROUPS 12xA-L couvre 48 equipes\", \"chaque groupe clique reelle\", \"R32 16 paires bien formees\", \"tests passent\"]}\n```"
+    },
+    {
+      "id": 1,
+      "subject": "Task 2: tournament.py — primitives (classement, 3es, échantillonnage de match)",
+      "status": "completed",
+      "blockedBy": [
+        0
+      ],
+      "description": "**Goal:** Implémenter les briques pures testables : distribution de match, échantillonnage (résolution des nuls en phase finale), classement de groupe, sélection des meilleurs 3es.\n\n**Files:**\n- Create: tournament.py\n- Create: tests/test_tournament.py\n\n**Acceptance Criteria:**\n- make_match_dist(model, a, b, neutral) renvoie (cum, p1, p2), cum[-1]~=1\n- simulate_match sur dist dégénérée -> A vainqueur ; nul en phase finale tranché (jamais None)\n- rank_group ordonne points -> diff -> buts marqués\n- select_best_thirds garde les 8 meilleurs\n- pytest tests/test_tournament.py -v passe\n\n**Verify:** .venv/bin/pytest tests/test_tournament.py -v\n\n**Steps:** écrire tests primitives ; voir échouer ; écrire tournament.py (make_match_dist, simulate_match via searchsorted, rank_group, select_best_thirds) ; voir passer (5 tests).\n\n```json:metadata\n{\"files\": [\"tournament.py\", \"tests/test_tournament.py\"], \"verifyCommand\": \".venv/bin/pytest tests/test_tournament.py -v\", \"acceptanceCriteria\": [\"make_match_dist (cum,p1,p2)\", \"simulate_match resout nuls KO\", \"rank_group ordre correct\", \"select_best_thirds top 8\"]}\n```"
+    },
+    {
+      "id": 2,
+      "subject": "Task 3: tournament.py — construction du tableau & simulation complète",
+      "status": "completed",
+      "blockedBy": [
+        1
+      ],
+      "description": "**Goal:** Ajouter build_bracket (placement 1ers/2es/3es en évitant les retrouvailles de groupe) et simulate_tournament (niveau atteint, buts, matchs par équipe).\n\n**Files:**\n- Modify: tournament.py (build_bracket, simulate_tournament, _assign_thirds)\n- Modify: tests/test_tournament.py (tests tableau + simulation)\n\n**Acceptance Criteria:**\n- build_bracket place 1ers/2es et affecte les 8 troisièmes en évitant un adversaire de leur propre groupe quand possible\n- simulate_tournament déterministe -> niveau 6 au plus fort, exactement 32 équipes niveau>=1\n- buts d'une équipe éliminée en poule = somme de ses 3 matchs\n- pytest tests/test_tournament.py -v passe (8 tests)\n\n**Verify:** .venv/bin/pytest tests/test_tournament.py -v\n\n**Steps:** ajouter tests (toy world déterministe) ; voir échouer ; ajouter _assign_thirds (backtracking), build_bracket, simulate_tournament (poule -> 3es -> tableau -> KO) ; voir passer (8 tests).\n\n```json:metadata\n{\"files\": [\"tournament.py\", \"tests/test_tournament.py\"], \"verifyCommand\": \".venv/bin/pytest tests/test_tournament.py -v\", \"acceptanceCriteria\": [\"build_bracket evite meme groupe\", \"plus fort champion + 32 qualifies\", \"buts elimine = 3 matchs\", \"8 tests passent\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 4: simulate_wc2026.py — driver, agrégation, CSV",
+      "status": "completed",
+      "blockedBy": [
+        2
+      ],
+      "description": "**Goal:** Brancher le modèle réel : ajuster, valider les groupes, pré-calculer les distributions, lancer N simulations, agréger en probabilités et buts attendus, écrire le CSV et imprimer un top 15.\n\n**Files:**\n- Create: simulate_wc2026.py\n\n**Acceptance Criteria:**\n- produit simulation_cdm2026.csv (48 lignes, 9 colonnes equipe/P_titre/P_finale/P_demi/P_quart/P_8e/P_qualifie/buts_totaux_attendus/matchs_joues_attendus)\n- somme des P_titre = 1 (assertion abs(sum-1)<1e-9)\n- distributions de groupe avec avantage hote (neutral reel) ; phase finale neutre\n- top 15 avec favoris credibles (Argentine/Espagne/Bresil/France) en tete\n- N constante en tete (defaut 20000)\n\n**Verify:** .venv/bin/python simulate_wc2026.py -> top 15 + simulation_cdm2026.csv (48 lignes)\n\n**Steps:** écrire simulate_wc2026.py (fit modèle ; assert GROUPS==fixtures ; group_fixtures + neutral réel ; pré-calc group_dist & neutral_dist ; boucle N sims agrégeant reach/goals/matches ; agrégation -> CSV ; top 15) ; lancer ; vérifier CSV.\n\n```json:metadata\n{\"files\": [\"simulate_wc2026.py\"], \"verifyCommand\": \".venv/bin/python simulate_wc2026.py\", \"acceptanceCriteria\": [\"CSV 48 lignes 9 colonnes\", \"somme P_titre=1\", \"avantage hote poule / neutre KO\", \"favoris en tete\", \"N=20000 par defaut\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-06-09T12:06:38.713894"
+}
