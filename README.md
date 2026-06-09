@@ -1,3 +1,12 @@
+⚠️ **DISCLAIMER** ⚠️
+
+**Ce projet a été généré entièrement par Claude Code Opus (Claude Opus 4.8) pour s'amuser.
+L'auteur n'a aucune idée de la validité scientifique, statistique ou méthodologique de ce qui
+est présenté ici.** Aucune garantie qu'il soit fiable pour des prédictions réelles.
+À utiliser à titre ludique uniquement.
+
+---
+
 # Pronostics Coupe du Monde 2026
 
 Modèle statistique de prédiction de la Coupe du Monde 2026, du score d'un match
